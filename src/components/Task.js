@@ -6,9 +6,10 @@ import './Task.css';
 const Task = ({ id, title, isComplete }) => {
   const [complete, setComplete] = useState(isComplete);
   const buttonClass = complete ? 'tasks__item__toggle--completed' : '';
+  const listColor = complete ? 'green' : ''
 
   return (
-    <li className="tasks__item">
+    <li className={`tasks__item ${listColor}`}>
       <button
         className={`tasks__item__toggle ${buttonClass}`}
         onClick={() => setComplete(!complete)}
