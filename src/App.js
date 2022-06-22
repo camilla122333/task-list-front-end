@@ -1,10 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TaskList from './components/TaskList.js';
 import './App.css';
 import tasksJson from './data/tasks.json';
+import axios from 'axios';
+
+export const URL = 'http://task-and-goal-list-api.herokuapp.com/tasks';
 
 const App = () => {
-  const [tasks, setTasks] = useState(tasksJson);
+  const [tasks, setTasks] = useState([]);
+  const [status, setStatus] = useState('Loading...');
+
+  useEffect(() => {
+    axios
+      .get(URL)
+      .then((response) => {
+        setTasks(() => {
+          return response.data.map((task) => {
+            return {
+              description: task.description,
+              goalId: task.goal_id,
+              id: task.id,
+              isComplete: task.is_complete,
+              title: task.title
+            };
+          });
+        });
+        // const newTasks = response.data.map((task) => {
+        //   return {
+        //     description: task.description,
+        //     goalId: task.goal_id,
+        //     id: task.id,
+        //     isComplete: task.is_complete,
+        //     title: task.title
+        //   };
+        // });
+        setStatus('Loaded');
+        console.log(status);
+        // setTasks(newTasks);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  }, []);
 
   const updateTask = id => {
     // create a new list of task data in which the clicked task has its
@@ -12,31 +49,44 @@ const App = () => {
     // code, and we may prefer the functional style of setting tasks, which
     // has the latest state, even if a render hasn't yet happened (see below).
 
-    const newTasks = tasks.map(task => {
-      if (task.id === id) {
-        return { ...task, isComplete: !task.isComplete };
-      } else {
-        return task;
-      }
-    });
-
-    setTasks(newTasks);
-
-    // // Alternative functional style set state call
-    // setTasks(oldTasks => {
-    //   // the logic is identical as above, but instead, we return the new value
-    //   // to be used for the state, and the input parameter will be the current
-    //   // state with any pending changes applied, even if the next render hasn't
-    //   // yet occurred.
-
-    //   return oldTasks.map(task => {
-    //     if (task.id === id) {
-    //       return { ...task, isComplete: !task.isComplete };
-    //     } else {
-    //       return task;
-    //     }
-    //   });
+    // const newTasks = tasks.map(task => {
+    //   if (task.id === id) {
+    //     return { ...task, isComplete: !task.isComplete };
+    //   } else {
+    //     return task;
+    //   }
     // });
+
+    // setTasks(newTasks);
+    let endpoint;
+    for (const task of tasks){
+      if (task.id === id){
+        endpoint = !task.isComplete ? `/${id}/mark_complete`: `/${id}/mark_incomplete`;
+      }
+    }
+    axios
+    .patch(URL + endpoint)
+    .then((response) => {
+      console.log(response);
+      // Alternative functional style set state call
+      setTasks(oldTasks => {
+        // the logic is identical as above, but instead, we return the new value
+        // to be used for the state, and the input parameter will be the current
+        // state with any pending changes applied, even if the next render hasn't
+        // yet occurred.
+  
+        return oldTasks.map(task => {
+          if (task.id === id) {
+            return { ...task, isComplete: !task.isComplete };
+          } else {
+            return task;
+          }
+        });
+      });
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   };
 
   const deleteTask = id => {
@@ -48,19 +98,26 @@ const App = () => {
     // completion, this approach is slightly unsafe for asynchronous code, so
     // might prefer the functional set state style (see below).
 
-    const newTasks = tasks.filter(task => task.id !== id);
+    // const newTasks = tasks.filter(task => task.id !== id);
 
-    setTasks(newTasks);
-
-    // // Alternative functional style set state call
-    // setTasks(oldTasks => {
-    //   // the logic is identical as above, but instead, we return the new value
-    //   // to be used for the state, and the input parameter will be the current
-    //   // state with any pending changes applied, even if the next render hasn't
-    //   // yet occurred.
-
-    //   return oldTasks.filter(task => task.id !== id);
-    // });
+    // setTasks(newTasks);
+    let endpoint = `/${id}`;
+    axios
+    .delete(URL + endpoint)
+    .then((response) => {
+      console.log(response);
+      // Alternative functional style set state call
+      setTasks(oldTasks => {
+      // the logic is identical as above, but instead, we return the new value
+      // to be used for the state, and the input parameter will be the current
+      // state with any pending changes applied, even if the next render hasn't
+      // yet occurred.
+      return oldTasks.filter(task => task.id !== id);
+    });
+    })
+    .catch((error) => {
+      console.log(error);
+    });
   };
 
   return (
