@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import TaskList from './components/TaskList.js';
+import NewTaskForm from './components/NewTaskForm.js';
 import './App.css';
-import tasksJson from './data/tasks.json';
 import axios from 'axios';
 
 export const URL = 'http://task-and-goal-list-api.herokuapp.com/tasks';
@@ -21,7 +21,7 @@ const App = () => {
               goalId: task.goal_id,
               id: task.id,
               isComplete: task.is_complete,
-              title: task.title
+              title: task.title,
             };
           });
         });
@@ -43,7 +43,7 @@ const App = () => {
       });
   }, []);
 
-  const updateTask = id => {
+  const updateTask = (id) => {
     // create a new list of task data in which the clicked task has its
     // completion toggled. This approach is _slightly_ unsafe in asynchronous
     // code, and we may prefer the functional style of setting tasks, which
@@ -59,37 +59,42 @@ const App = () => {
 
     // setTasks(newTasks);
     let endpoint;
-    for (const task of tasks){
-      if (task.id === id){
-        endpoint = !task.isComplete ? `/${id}/mark_complete`: `/${id}/mark_incomplete`;
+    for (const task of tasks) {
+      if (task.id === id) {
+        endpoint = !task.isComplete
+          ? `/${id}/mark_complete`
+          : `/${id}/mark_incomplete`;
       }
     }
     axios
-    .patch(URL + endpoint)
-    .then((response) => {
-      console.log(response);
-      // Alternative functional style set state call
-      setTasks(oldTasks => {
-        // the logic is identical as above, but instead, we return the new value
-        // to be used for the state, and the input parameter will be the current
-        // state with any pending changes applied, even if the next render hasn't
-        // yet occurred.
-  
-        return oldTasks.map(task => {
-          if (task.id === id) {
-            return { ...task, isComplete: !task.isComplete };
-          } else {
-            return task;
-          }
+      .patch(URL + endpoint)
+      .then((response) => {
+        console.log(response);
+        // Alternative functional style set state call
+        //Ansel, explain where oldTask is coming from
+        //is oldTask a param? Where are we passing an argument?
+        //Is functional style better? Seems messy
+        setTasks((oldTasks) => {
+          // the logic is identical as above, but instead, we return the new value
+          // to be used for the state, and the input parameter will be the current
+          // state with any pending changes applied, even if the next render hasn't
+          // yet occurred.
+
+          return oldTasks.map((task) => {
+            if (task.id === id) {
+              return { ...task, isComplete: !task.isComplete };
+            } else {
+              return task;
+            }
+          });
         });
+      })
+      .catch((error) => {
+        console.log(error);
       });
-    })
-    .catch((error) => {
-      console.log(error);
-    });
   };
 
-  const deleteTask = id => {
+  const deleteTask = (id) => {
     // create a new list of task data in which the clicked task is removed
     // from the list. The function given to .filter should return true if that
     // entry in the list should be kept, and false if it should be excluded. We
@@ -103,21 +108,34 @@ const App = () => {
     // setTasks(newTasks);
     let endpoint = `/${id}`;
     axios
-    .delete(URL + endpoint)
-    .then((response) => {
-      console.log(response);
-      // Alternative functional style set state call
-      setTasks(oldTasks => {
-      // the logic is identical as above, but instead, we return the new value
-      // to be used for the state, and the input parameter will be the current
-      // state with any pending changes applied, even if the next render hasn't
-      // yet occurred.
-      return oldTasks.filter(task => task.id !== id);
-    });
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+      .delete(URL + endpoint)
+      .then((response) => {
+        console.log(response);
+        // Alternative functional style set state call
+        setTasks((oldTasks) => {
+          // the logic is identical as above, but instead, we return the new value
+          // to be used for the state, and the input parameter will be the current
+          // state with any pending changes applied, even if the next render hasn't
+          // yet occurred.
+          return oldTasks.filter((task) => task.id !== id);
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const addTask = newTaskData => {
+    axios
+      .post(URL, newTaskData)
+      .then((response) => {
+        setTasks(oldTasks => [...oldTasks, {...newTaskData, id: Math.max(...oldTasks.map(task => task.id)) + 1}]);
+        console.log(response);
+        console.log(tasks);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   return (
@@ -132,6 +150,9 @@ const App = () => {
             onToggleCompleteCallback={updateTask}
             onDeleteCallback={deleteTask}
           />
+        </div>
+        <div>
+          <NewTaskForm onAddTask={addTask}></NewTaskForm>
         </div>
       </main>
     </div>
