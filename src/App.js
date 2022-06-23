@@ -129,7 +129,7 @@ const App = () => {
     axios
       .post(URL, newTaskData)
       .then((response) => {
-        setTasks(oldTasks => [...oldTasks, {...newTaskData, id: Math.max(...oldTasks.map(task => task.id)) + 1}]);
+        setTasks(oldTasks => [...oldTasks, {...newTaskData, id: response.data.task.id}]);
         console.log(response);
         console.log(tasks);
       })

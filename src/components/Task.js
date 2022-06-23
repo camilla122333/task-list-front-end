@@ -20,12 +20,12 @@ const Task = ({
   };
 
   return (
-    <li className={`tasks__item ${listColor}`}>
+    <li className={'tasks__item'}>
       <button
         className={`tasks__item__toggle ${buttonClass}`}
         onClick={handleTaskClicked}
       >
-        props.title
+        {title}
       </button>
       <button
         className="tasks__item__remove button"
